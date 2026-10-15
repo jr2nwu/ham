@@ -163,28 +163,36 @@
             }
             document.getElementById('text_lon').innerText = longitudeStr;
 
-            // 3. Compute and Parse Offline MGRS String Values
-            try {
-                // Accuracy '5' ensures 1-meter precision matching Android app
-                const rawMgrs = window.mgrs.forward([longitude, latitude], 5);
+    // 3. Compute and Parse Offline MGRS String Values
+    try {
+        // Accuracy '5' ensures 5-digit accuracy strings (1-meter precision)
+        const rawMgrs = window.mgrs.forward([longitude, latitude], 5);
 
-                // Fixed RegEx line anchor (\$) safely extracts data chunks from the output string
-                const match = rawMgrs.match(/^(\d{1,2}[C-X])([A-Z]{2})(\d{5})(\d{5})\$/);
+        // --- ADD THIS DIAGNOSTIC LINE HERE ---
+        console.log("👉 DETECTED RAW MGRS OUTPUT:", rawMgrs);
+        // -------------------------------------
 
-                if (match) {
-                    const mgrsZone     = match[1]; // e.g., "31U"
-                    const mgrs100K     = match[2]; // e.g., "DQ"
-                    const mgrsEasting  = match[3]; // e.g., "48252"
-                    const mgrsNorthing = match[4]; // e.g., "11937"
+        // Your current RegEx sequence
+        const match = rawMgrs.match(/^(\d{1,2}[C-X])([A-Z]{2})(\d{5})(\d{5})\$/);
 
-                    // Notice the double space between Zone and 100K to mirror your Android app string style
-                    document.getElementById('text_mgrsZone100K').innerText = `${mgrsZone}  ${mgrs100K}`;
-                    document.getElementById('text_mgrsEast').innerText = mgrsEasting;
-                    document.getElementById('text_mgrsNorth').innerText = mgrsNorthing;
-                }
-            } catch (error) {
-                console.error("MGRS Conversion failed: ", error);
-            }
+        if (match) {
+            const mgrsZone     = match[1];
+            const mgrs100K     = match[2];
+            const mgrsEasting  = match[3];
+            const mgrsNorthing = match[4];
+
+            document.getElementById('text_mgrsZone100K').innerText = `${mgrsZone}  ${mgrs100K}`;
+            document.getElementById('text_mgrsEast').innerText = mgrsEasting;
+            document.getElementById('text_mgrsNorth').innerText = mgrsNorthing;
+        } else {
+            // --- ADD THIS LOG TO SEE IF REGEX REJECTED IT ---
+            console.warn("❌ RegEx rejected the string pattern:", rawMgrs);
+            // ------------------------------------------------
+        }
+    } catch (error) {
+        console.error("MGRS Conversion failed: ", error);
+    }
+
         }
 
         function onLocationError(error) {
