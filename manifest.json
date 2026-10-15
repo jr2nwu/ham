@@ -1,9 +1,9 @@
 {
-  "short_name": "LiveGPS",
+  "short_name": "MGRS",
   "name": "Live GPS Coordinate Display",
   "icons": [
     {
-      "src": "https://flaticon.com",
+      "src": "mgrs.png",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "any maskable"

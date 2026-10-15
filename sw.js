@@ -1,9 +1,10 @@
-const CACHE_NAME = 'gps-live-v1';
+const CACHE_NAME = 'gps-live-v2';
 const ASSETS = [
     './',
 './index.html',
 './manifest.json',
 './sw.js'
+'./mgrs.js'
 ];
 
 self.addEventListener('install', (e) => {

@@ -1,140 +1,162 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Live GPS Tracker</title>
-  <link rel="manifest" href="manifest.json">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-      margin: 0;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      background-color: #000000;
-      color: #ffffff;
-      text-align: center;
-    }
-    .container {
-      width: 100%;
-      max-width: 400px;
-    }
-    .coordinate-box {
-      font-size: 2.5rem;
-      font-weight: bold;
-      margin: 20px 0;
-      font-variant-numeric: tabular-nums;
-    }
-    .label {
-      font-size: 1rem;
-      color: #8e8e93;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-    .accuracy {
-      font-size: 1.1rem;
-      color: #34c759;
-      margin-top: 10px;
-    }
-    button {
-      background-color: #007aff;
-      color: white;
-      border: none;
-      padding: 20px 40px;
-      font-size: 1.5rem;
-      font-weight: 600;
-      border-radius: 14px;
-      cursor: pointer;
-      width: 100%;
-      box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4);
-    }
-    button:active {
-      background-color: #0056b3;
-    }
-    .hidden {
-      display: none;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Live GPS Coordinate Display</title>
+    <link rel="manifest" href="./manifest.json">
+    <style>
+        /* Replicating ?attr/colorSurface (Dark theme setup matching your background color #000000) */
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #000000;
+            color: #FFFFFF; /* ?attr/colorOnSurface */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* ConstraintLayout Simulation View Container */
+        .constraint-layout {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Base styles mimicking Android's TextView parameters */
+        .text-view {
+            position: absolute;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            white-space: nowrap;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        /* Mapping Android vertical bias constraints & text size (sp -> vmin/rem equivalent) */
+        #text_lat {
+            top: 30%; /* app:layout_constraintVertical_bias="0.3" */
+            font-size: 2.2rem; /* approx 35sp scaling */
+        }
+
+        #text_lon {
+            top: 40%; /* app:layout_constraintVertical_bias="0.4" */
+            font-size: 2.2rem; /* approx 35sp scaling */
+        }
+
+        #text_mgrsZone100K {
+            top: 60%; /* app:layout_constraintVertical_bias="0.6" */
+            font-size: 2.5rem; /* approx 40sp scaling */
+        }
+
+        #text_mgrsEast {
+            top: 70%; /* app:layout_constraintVertical_bias="0.7" */
+            font-size: 2.5rem; /* approx 40sp scaling */
+        }
+
+        #text_mgrsNorth {
+            top: 80%; /* app:layout_constraintVertical_bias="0.8" */
+            font-size: 2.5rem; /* approx 40sp scaling */
+        }
+    </style>
 </head>
 <body>
 
-  <div class="container">
-    <div id="setupScreen">
-      <h1 style="margin-bottom: 30px;">GPS Receiver</h1>
-      <button id="startBtn">Tap to Start GPS</button>
+    <div class="constraint-layout">
+        <!-- Replicating exact active TextView layout configurations from Android XML -->
+        <div id="text_lat" class="text-view">---</div>
+        <div id="text_lon" class="text-view">---</div>
+        <div id="text_mgrsZone100K" class="text-view">---</div>
+        <div id="text_mgrsEast" class="text-view">---</div>
+        <div id="text_mgrsNorth" class="text-view">---</div>
     </div>
 
-    <div id="displayScreen" class="hidden">
-      <div class="label">Latitude</div>
-      <div id="latDisplay" class="coordinate-box">0.000000</div>
-
-      <div class="label" style="margin-top: 40px;">Longitude</div>
-      <div id="lonDisplay" class="coordinate-box">0.000000</div>
-
-      <div id="accDisplay" class="accuracy">Waiting for signal...</div>
-    </div>
-  </div>
-
-  <script>
-    // Register Service Worker for Offline capability
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-          .then(reg => console.log('SW Registered'))
-          .catch(err => console.error('SW Registration Failed', err));
-      });
-    }
-
-    let watchId = null;
-    let wakeLock = null;
-
-    const setupScreen = document.getElementById('setupScreen');
-    const displayScreen = document.getElementById('displayScreen');
-    const startBtn = document.getElementById('startBtn');
-    const latDisplay = document.getElementById('latDisplay');
-    const lonDisplay = document.getElementById('lonDisplay');
-    const accDisplay = document.getElementById('accDisplay');
-
-    async function requestWakeLock() {
-      try {
-        if ('wakeLock' in navigator) {
-          wakeLock = await navigator.wakeLock.request('screen');
+    <!-- Register PWA Service Worker for full offline capabilities -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker registered successfully.', reg.scope))
+                    .catch(err => console.error('Service Worker registration failed:', err));
+            });
         }
-      } catch (err) {
-        console.warn('Wake lock unsupported or rejected:', err.message);
-      }
-    }
+    </script>
 
-    startBtn.addEventListener('click', async () => {
-      if (!navigator.geolocation) {
-        alert("Geolocation is not supported by this device.");
-        return;
-      }
+    <!-- Load the locally cached proj4js/mgrs script asset -->
+    <script src="./mgrs.js"></script>
 
-      setupScreen.classList.add('hidden');
-      displayScreen.classList.remove('hidden');
-      await requestWakeLock();
+    <!-- Geolocation tracking and data parsing pipeline logic -->
+    <script>
+        const geoOptions = {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+        };
 
-      watchId = navigator.geolocation.watchPosition(
-        (position) => {
-          const { latitude, longitude, accuracy } = position.coords;
-          latDisplay.innerText = latitude.toFixed(6);
-          lonDisplay.innerText = longitude.toFixed(6);
-          accDisplay.innerText = `Accurate to ± ${Math.round(accuracy)} meters`;
-        },
-        (error) => {
-          accDisplay.innerText = `Error: ${error.message}`;
-          accDisplay.style.color = '#ff3b30';
-        },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-      );
-    });
-  </script>
+        if ("geolocation" in navigator) {
+            navigator.geolocation.watchPosition(onLocationSuccess, onLocationError, geoOptions);
+        } else {
+            document.getElementById('text_lat').innerText = "GPS Not Supported";
+        }
+
+        function onLocationSuccess(position) {
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+
+            // 1. Format and display Latitude exactly like your Android code
+            let latitudeStr = latitude.toFixed(5);
+            if (latitude > 0) {
+                latitudeStr += "° N";
+            } else if (latitude < 0) {
+                latitudeStr += "° S";
+            } else {
+                latitudeStr += "°";
+            }
+            document.getElementById('text_lat').innerText = latitudeStr;
+
+            // 2. Format and display Longitude exactly like your Android code
+            let longitudeStr = longitude.toFixed(5);
+            if (longitude > 0) {
+                longitudeStr += "° E";
+            } else if (longitude < 0) {
+                longitudeStr += "° W";
+            } else {
+                longitudeStr += "°";
+            }
+            document.getElementById('text_lon').innerText = longitudeStr;
+
+            // 3. Compute and Parse Offline MGRS String Values
+            try {
+                // Accuracy '5' ensures 5-digit accuracy strings (1-meter precision matching Android app)
+                const rawMgrs = window.mgrs.forward([longitude, latitude], 5);
+
+                // RegEx capturing groups match the string sections cleanly
+                const match = rawMgrs.match(/^(\d{1,2}[C-X])([A-Z]{2})(\d{5})(\d{5})\$/);
+
+                if (match) {
+                    const mgrsZone     = match[1]; // e.g., "31U"
+                    const mgrs100K     = match[2]; // e.g., "DQ"
+                    const mgrsEasting  = match[3]; // e.g., "48252"
+                    const mgrsNorthing = match[4]; // e.g., "11937"
+
+                    // Notice the double space between Zone and 100K to mirror your Android String manipulation
+                    document.getElementById('text_mgrsZone100K').innerText = `${mgrsZone}  ${mgrs100K}`;
+                    document.getElementById('text_mgrsEast').innerText = mgrsEasting;
+                    document.getElementById('text_mgrsNorth').innerText = mgrsNorthing;
+                }
+            } catch (error) {
+                console.error("MGRS Conversion failed: ", error);
+            }
+        }
+
+        function onLocationError(error) {
+            console.error(`Error (${error.code}): ${error.message}`);
+            document.getElementById('text_lat').innerText = "Waiting for signal...";
+            document.getElementById('text_lon').innerText = `Error Code: ${error.code}`;
+        }
+    </script>
 </body>
 </html>
