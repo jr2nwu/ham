@@ -6,7 +6,7 @@
     <title>Live GPS Coordinate Display</title>
     <link rel="manifest" href="./manifest.json">
     <style>
-        /* Replicating ?attr/colorSurface (Dark theme setup matching your background color #000000) */
+        /* Dark theme setup matching your background color #000000 */
         body {
             margin: 0;
             padding: 0;
@@ -119,9 +119,6 @@
             maximumAge: 0
         };
 
-        /**
-         * Triggered directly via button tap to explicitly satisfy iOS rules
-         */
         function initializeGps() {
             // Hide the button so it clears out of the view layout space
             document.getElementById('start_btn').style.display = 'none';
@@ -130,7 +127,6 @@
             document.getElementById('text_lon').innerText = "Searching...";
 
             if ("geolocation" in navigator) {
-                // Starts active background watching stream loop
                 watchId = navigator.geolocation.watchPosition(onLocationSuccess, onLocationError, geoOptions);
             } else {
                 document.getElementById('text_lat').innerText = "GPS Not Supported";
@@ -163,47 +159,51 @@
             }
             document.getElementById('text_lon').innerText = longitudeStr;
 
-    // 3. Compute and Parse Offline MGRS String Values
-    try {
-        // Accuracy '5' ensures 5-digit accuracy strings (1-meter precision)
-        const rawMgrs = window.mgrs.forward([longitude, latitude], 5);
+            // 3. Compute and Parse Offline MGRS String Values
+            try {
+                // Accuracy '5' ensures 1-meter precision matching Android app
+                const rawMgrs = window.mgrs.forward([longitude, latitude], 5);
+                console.log("Raw MGRS Output:", rawMgrs);
 
-        // --- ADD THIS DIAGNOSTIC LINE HERE ---
-        console.log("👉 DETECTED RAW MGRS OUTPUT:", rawMgrs);
-        // -------------------------------------
+                if (rawMgrs && rawMgrs.length >= 13) {
+                    // Find where the letter block starts (handles 1-digit zones or 2-digit zones like "53S")
+                    const letterMatch = rawMgrs.match(/[A-Z]/);
+                    if (letterMatch) {
+                        const firstLetterIdx = letterMatch.index;
+                        const gzdEndIdx = firstLetterIdx + 1; // Grid Zone end position
 
-        // Your current RegEx sequence
-        const match = rawMgrs.match(/^(\d{1,2}[C-X])([A-Z]{2})(\d{5})(\d{5})\$/);
+                        // Extract structural elements cleanly using character count positions
+                        const mgrsZone     = rawMgrs.substring(0, gzdEndIdx);
+                        const mgrs100K     = rawMgrs.substring(gzdEndIdx, gzdEndIdx + 2);
 
-        if (match) {
-            const mgrsZone     = match[1];
-            const mgrs100K     = match[2];
-            const mgrsEasting  = match[3];
-            const mgrsNorthing = match[4];
+                        // Split remaining coordinate numbers right down the middle
+                        const numericPart  = rawMgrs.substring(gzdEndIdx + 2);
+                        const halfLength   = numericPart.length / 2;
 
-            document.getElementById('text_mgrsZone100K').innerText = `${mgrsZone}  ${mgrs100K}`;
-            document.getElementById('text_mgrsEast').innerText = mgrsEasting;
-            document.getElementById('text_mgrsNorth').innerText = mgrsNorthing;
-        } else {
-            // --- ADD THIS LOG TO SEE IF REGEX REJECTED IT ---
-            console.warn("❌ RegEx rejected the string pattern:", rawMgrs);
-            // ------------------------------------------------
-        }
-    } catch (error) {
-        console.error("MGRS Conversion failed: ", error);
-    }
+                        const mgrsEasting  = numericPart.substring(0, halfLength);
+                        const mgrsNorthing = numericPart.substring(halfLength);
 
+                        // Push data to screens with identical Android application formatting
+                        document.getElementById('text_mgrsZone100K').innerText = `${mgrsZone}  ${mgrs100K}`;
+                        document.getElementById('text_mgrsEast').innerText = mgrsEasting;
+                        document.getElementById('text_mgrsNorth').innerText = mgrsNorthing;
+                    }
+                }
+            } catch (error) {
+                console.error("MGRS Conversion failed: ", error);
+            }
         }
 
         function onLocationError(error) {
             console.error(`Error (${error.code}): ${error.message}`);
-            // Bring button back if permission fails completely so they can try re-tapping
             if (error.code === error.PERMISSION_DENIED) {
                 document.getElementById('start_btn').style.display = 'block';
-                alert("Location tracking access denied. Please allow location permissions and try again.");
+                alert("Location tracking access denied. Please enable location permissions.");
             }
-            document.getElementById('text_lat').innerText = "Signal Interrupted";
-            document.getElementById('text_lon').innerText = `Error Code: ${error.code}`;
+            // Notice: your log showed "Position acquisition timed out" once, which is normal indoors.
+            // It will update fine as soon as you step near a window or outdoors!
+            document.getElementById('text_lat').innerText = "Signal Timeout";
+            document.getElementById('text_lon').innerText = "Retrying location lock...";
         }
     </script>
 </body>
