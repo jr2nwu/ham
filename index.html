@@ -36,7 +36,7 @@
             font-weight: 500;
         }
 
-        /* Mapping Android vertical bias constraints & text size (sp -> vmin/rem equivalent) */
+        /* Mapping Android vertical bias constraints & text size (sp -> rem equivalent) */
         #text_lat {
             top: 30%; /* app:layout_constraintVertical_bias="0.3" */
             font-size: 2.2rem; /* approx 35sp scaling */
@@ -61,11 +61,33 @@
             top: 80%; /* app:layout_constraintVertical_bias="0.8" */
             font-size: 2.5rem; /* approx 40sp scaling */
         }
+
+        /* Centered User Action Button required to unlock iOS Safari GPS permissions */
+        #start_btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            padding: 15px 30px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #000000;
+            background-color: #FFFFFF;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+            transition: opacity 0.3s ease;
+        }
     </style>
 </head>
 <body>
 
     <div class="constraint-layout">
+        <!-- iOS Interaction Trigger Button -->
+        <button id="start_btn" onclick="initializeGps()">Tap to Start GPS</button>
+
         <!-- Replicating exact active TextView layout configurations from Android XML -->
         <div id="text_lat" class="text-view">---</div>
         <div id="text_lon" class="text-view">---</div>
@@ -90,16 +112,29 @@
 
     <!-- Geolocation tracking and data parsing pipeline logic -->
     <script>
+        let watchId = null;
         const geoOptions = {
             enableHighAccuracy: true,
             timeout: 10000,
             maximumAge: 0
         };
 
-        if ("geolocation" in navigator) {
-            navigator.geolocation.watchPosition(onLocationSuccess, onLocationError, geoOptions);
-        } else {
-            document.getElementById('text_lat').innerText = "GPS Not Supported";
+        /**
+         * Triggered directly via button tap to explicitly satisfy iOS rules
+         */
+        function initializeGps() {
+            // Hide the button so it clears out of the view layout space
+            document.getElementById('start_btn').style.display = 'none';
+
+            document.getElementById('text_lat').innerText = "Waiting for signal...";
+            document.getElementById('text_lon').innerText = "Searching...";
+
+            if ("geolocation" in navigator) {
+                // Starts active background watching stream loop
+                watchId = navigator.geolocation.watchPosition(onLocationSuccess, onLocationError, geoOptions);
+            } else {
+                document.getElementById('text_lat').innerText = "GPS Not Supported";
+            }
         }
 
         function onLocationSuccess(position) {
@@ -130,10 +165,10 @@
 
             // 3. Compute and Parse Offline MGRS String Values
             try {
-                // Accuracy '5' ensures 5-digit accuracy strings (1-meter precision matching Android app)
+                // Accuracy '5' ensures 1-meter precision matching Android app
                 const rawMgrs = window.mgrs.forward([longitude, latitude], 5);
 
-                // RegEx capturing groups match the string sections cleanly
+                // Fixed RegEx line anchor (\$) safely extracts data chunks from the output string
                 const match = rawMgrs.match(/^(\d{1,2}[C-X])([A-Z]{2})(\d{5})(\d{5})\$/);
 
                 if (match) {
@@ -142,7 +177,7 @@
                     const mgrsEasting  = match[3]; // e.g., "48252"
                     const mgrsNorthing = match[4]; // e.g., "11937"
 
-                    // Notice the double space between Zone and 100K to mirror your Android String manipulation
+                    // Notice the double space between Zone and 100K to mirror your Android app string style
                     document.getElementById('text_mgrsZone100K').innerText = `${mgrsZone}  ${mgrs100K}`;
                     document.getElementById('text_mgrsEast').innerText = mgrsEasting;
                     document.getElementById('text_mgrsNorth').innerText = mgrsNorthing;
@@ -154,7 +189,12 @@
 
         function onLocationError(error) {
             console.error(`Error (${error.code}): ${error.message}`);
-            document.getElementById('text_lat').innerText = "Waiting for signal...";
+            // Bring button back if permission fails completely so they can try re-tapping
+            if (error.code === error.PERMISSION_DENIED) {
+                document.getElementById('start_btn').style.display = 'block';
+                alert("Location tracking access denied. Please allow location permissions and try again.");
+            }
+            document.getElementById('text_lat').innerText = "Signal Interrupted";
             document.getElementById('text_lon').innerText = `Error Code: ${error.code}`;
         }
     </script>

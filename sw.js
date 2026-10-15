@@ -1,9 +1,9 @@
-const CACHE_NAME = 'gps-live-v2';
+const CACHE_NAME = 'gps-live-v3';
 const ASSETS = [
     './',
 './index.html',
 './manifest.json',
-'./sw.js'
+'./sw.js',
 './mgrs.js'
 ];
 
