@@ -6,63 +6,22 @@
     <title>Live GPS Coordinate Display</title>
     <link rel="manifest" href="./manifest.json">
     <style>
-        /* Dark theme setup matching your background color #000000 */
+        /* ==========================================================================
+           1. DEFAULT LIGHT THEME SETTINGS (Matches Android ?attr/colorSurface)
+           ========================================================================== */
         body {
             margin: 0;
             padding: 0;
             width: 100vw;
             height: 100vh;
-            background-color: #000000;
-            color: #FFFFFF; /* ?attr/colorOnSurface */
+            background-color: #FFFFFF; /* Light surface background */
+            color: #000000;            /* Dark text color */
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             overflow: hidden;
             position: relative;
         }
 
-        /* ConstraintLayout Simulation View Container */
-        .constraint-layout {
-            position: relative;
-            width: 100%;
-            height: 100%;
-        }
-
-        /* Base styles mimicking Android's TextView parameters */
-        .text-view {
-            position: absolute;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            white-space: nowrap;
-            text-align: center;
-            font-weight: 500;
-        }
-
-        /* Mapping Android vertical bias constraints & text size (sp -> rem equivalent) */
-        #text_lat {
-            top: 30%; /* app:layout_constraintVertical_bias="0.3" */
-            font-size: 2.2rem; /* approx 35sp scaling */
-        }
-
-        #text_lon {
-            top: 40%; /* app:layout_constraintVertical_bias="0.4" */
-            font-size: 2.2rem; /* approx 35sp scaling */
-        }
-
-        #text_mgrsZone100K {
-            top: 60%; /* app:layout_constraintVertical_bias="0.6" */
-            font-size: 2.5rem; /* approx 40sp scaling */
-        }
-
-        #text_mgrsEast {
-            top: 70%; /* app:layout_constraintVertical_bias="0.7" */
-            font-size: 2.5rem; /* approx 40sp scaling */
-        }
-
-        #text_mgrsNorth {
-            top: 80%; /* app:layout_constraintVertical_bias="0.8" */
-            font-size: 2.5rem; /* approx 40sp scaling */
-        }
-
-        /* Centered User Action Button required to unlock iOS Safari GPS permissions */
+        /* Standard Light Mode Button Style */
         #start_btn {
             position: absolute;
             top: 50%;
@@ -72,23 +31,96 @@
             padding: 15px 30px;
             font-size: 1.5rem;
             font-weight: bold;
-            color: #000000;
-            background-color: #FFFFFF;
+            color: #FFFFFF;
+            background-color: #000000;
             border: none;
             border-radius: 30px;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             transition: opacity 0.3s ease;
+        }
+
+        /* Default Status Text Color (Light Mode) */
+        #text_status {
+            top: 15%; /* Positioned neatly above Latitude box */
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #666666;
+        }
+
+        /* ==========================================================================
+           2. AUTOMATIC SYSTEM DARK THEME OVERRIDE (Follows phone display settings)
+           ========================================================================== */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #000000; /* Deep black surface */
+                color: #FFFFFF;            /* Crispy white text */
+            }
+            #start_btn {
+                color: #000000;
+                background-color: #FFFFFF;
+                box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+            }
+            #text_status {
+                color: #A0A0A0;
+            }
+        }
+
+        /* ==========================================================================
+           3. VIEW LAYOUT LAYER (Simulating ConstraintLayout Biases)
+           ========================================================================== */
+        .constraint-layout {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .text-view {
+            position: absolute;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            white-space: nowrap;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        /* Map Android XML layout vertical biases explicitly */
+        #text_lat {
+            top: 30%; /* app:layout_constraintVertical_bias="0.3" */
+            font-size: 2.2rem; /* 35sp scaling equivalent */
+        }
+
+        #text_lon {
+            top: 40%; /* app:layout_constraintVertical_bias="0.4" */
+            font-size: 2.2rem; /* 35sp scaling equivalent */
+        }
+
+        #text_mgrsZone100K {
+            top: 60%; /* app:layout_constraintVertical_bias="0.6" */
+            font-size: 2.5rem; /* 40sp scaling equivalent */
+        }
+
+        #text_mgrsEast {
+            top: 70%; /* app:layout_constraintVertical_bias="0.7" */
+            font-size: 2.5rem; /* 40sp scaling equivalent */
+        }
+
+        #text_mgrsNorth {
+            top: 80%; /* app:layout_constraintVertical_bias="0.8" */
+            font-size: 2.5rem; /* 40sp scaling equivalent */
         }
     </style>
 </head>
 <body>
 
     <div class="constraint-layout">
-        <!-- iOS Interaction Trigger Button -->
+        <!-- Interactive Trigger required to bypass strict iOS Safari background restrictions -->
         <button id="start_btn" onclick="initializeGps()">Tap to Start GPS</button>
 
-        <!-- Replicating exact active TextView layout configurations from Android XML -->
+        <!-- Dynamic GPS Connection Integrity Banner -->
+        <div id="text_status" class="text-view">🛰️ GPS Stream Offline</div>
+
+        <!-- UI Elements mapping 1:1 to your Android XML layout schema -->
         <div id="text_lat" class="text-view">---</div>
         <div id="text_lon" class="text-view">---</div>
         <div id="text_mgrsZone100K" class="text-view">---</div>
@@ -96,7 +128,7 @@
         <div id="text_mgrsNorth" class="text-view">---</div>
     </div>
 
-    <!-- Register PWA Service Worker for full offline capabilities -->
+    <!-- PWA Worker Layer registration to handle true offline standalone cache executions -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -107,37 +139,53 @@
         }
     </script>
 
-    <!-- Load the locally cached proj4js/mgrs script asset -->
+    <!-- Load the locally bundled proj4js/mgrs parsing asset code script -->
     <script src="./mgrs.js"></script>
 
-    <!-- Geolocation tracking and data parsing pipeline logic -->
+    <!-- Core Pipeline: Sensor extraction, format structures, calculation splits -->
     <script>
         let watchId = null;
         const geoOptions = {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 0
+            enableHighAccuracy: true, // Forces phone to use satellite hardware instead of cell towers
+            timeout: 15000,           // Extends timeout loop slightly to prevent accidental canopy drops
+            maximumAge: 0             // Strictly rejects cached positions for safety navigation
         };
 
+        /**
+         * Fires on button interaction to launch hardware feeds
+         */
         function initializeGps() {
-            // Hide the button so it clears out of the view layout space
             document.getElementById('start_btn').style.display = 'none';
 
-            document.getElementById('text_lat').innerText = "Waiting for signal...";
+            const statusLabel = document.getElementById('text_status');
+            statusLabel.innerText = "🛰️ Connecting to Satellites...";
+            statusLabel.style.color = "#FFCC00"; // Warn yellow state while locking coordinates
+
+            document.getElementById('text_lat').innerText = "Acquiring signal...";
             document.getElementById('text_lon').innerText = "Searching...";
 
             if ("geolocation" in navigator) {
                 watchId = navigator.geolocation.watchPosition(onLocationSuccess, onLocationError, geoOptions);
             } else {
-                document.getElementById('text_lat').innerText = "GPS Not Supported";
+                statusLabel.innerText = "❌ GPS Hardware Missing";
+                statusLabel.style.color = "#FF3333";
+                document.getElementById('text_lat').innerText = "Not Supported";
             }
         }
 
+        /**
+         * Executed continuously by OS anytime a satellite refresh passes accuracy boundaries
+         */
         function onLocationSuccess(position) {
+            // Signal lock complete. Switch text indicator color to green
+            const statusLabel = document.getElementById('text_status');
+            statusLabel.innerText = "🛰️ Live GPS Lock Connected";
+            statusLabel.style.color = "#00CC66";
+
             const latitude = position.coords.latitude;
             const longitude = position.coords.longitude;
 
-            // 1. Format and display Latitude exactly like your Android code
+            // 1. Process and format Latitude text exactly like Android Kotlin/Java rules
             let latitudeStr = latitude.toFixed(5);
             if (latitude > 0) {
                 latitudeStr += "° N";
@@ -148,7 +196,7 @@
             }
             document.getElementById('text_lat').innerText = latitudeStr;
 
-            // 2. Format and display Longitude exactly like your Android code
+            // 2. Process and format Longitude text exactly like Android Kotlin/Java rules
             let longitudeStr = longitude.toFixed(5);
             if (longitude > 0) {
                 longitudeStr += "° E";
@@ -159,51 +207,59 @@
             }
             document.getElementById('text_lon').innerText = longitudeStr;
 
-            // 3. Compute and Parse Offline MGRS String Values
+            // 3. Mathematical Offline Conversion via proj4js/mgrs framework asset
             try {
-                // Accuracy '5' ensures 1-meter precision matching Android app
+                // Precision '5' guarantees 10-digit numeric chunks (1-meter high resolution)
                 const rawMgrs = window.mgrs.forward([longitude, latitude], 5);
-                console.log("Raw MGRS Output:", rawMgrs);
+                console.log("Raw MGRS Output Trace:", rawMgrs);
 
                 if (rawMgrs && rawMgrs.length >= 13) {
-                    // Find where the letter block starts (handles 1-digit zones or 2-digit zones like "53S")
+                    // Automatically locates the alphabetical band separator character boundary index
                     const letterMatch = rawMgrs.match(/[A-Z]/);
                     if (letterMatch) {
                         const firstLetterIdx = letterMatch.index;
-                        const gzdEndIdx = firstLetterIdx + 1; // Grid Zone end position
+                        const gzdEndIdx = firstLetterIdx + 1;
 
-                        // Extract structural elements cleanly using character count positions
+                        // Slice and partition strings safely by counting indexing spaces out
                         const mgrsZone     = rawMgrs.substring(0, gzdEndIdx);
                         const mgrs100K     = rawMgrs.substring(gzdEndIdx, gzdEndIdx + 2);
 
-                        // Split remaining coordinate numbers right down the middle
                         const numericPart  = rawMgrs.substring(gzdEndIdx + 2);
                         const halfLength   = numericPart.length / 2;
 
                         const mgrsEasting  = numericPart.substring(0, halfLength);
                         const mgrsNorthing = numericPart.substring(halfLength);
 
-                        // Push data to screens with identical Android application formatting
+                        // Feed parsed fields straight into layout text elements
+                        // Note the double-space separating Zone and 100K block to match Android layout logic
                         document.getElementById('text_mgrsZone100K').innerText = `${mgrsZone}  ${mgrs100K}`;
                         document.getElementById('text_mgrsEast').innerText = mgrsEasting;
                         document.getElementById('text_mgrsNorth').innerText = mgrsNorthing;
                     }
                 }
             } catch (error) {
-                console.error("MGRS Conversion failed: ", error);
+                console.error("Critical MGRS pipeline mathematical fault logic trace:", error);
             }
         }
 
+        /**
+         * Triggers dynamically if tree canopy blocks satellite views or permissions crash out
+         */
         function onLocationError(error) {
-            console.error(`Error (${error.code}): ${error.message}`);
+            console.error("Sensor Exception Code (" + error.code + "): " + error.message);
+            const statusLabel = document.getElementById('text_status');
+
             if (error.code === error.PERMISSION_DENIED) {
                 document.getElementById('start_btn').style.display = 'block';
-                alert("Location tracking access denied. Please enable location permissions.");
+                statusLabel.innerText = "❌ Location Access Denied";
+                statusLabel.style.color = "#FF3333"; // Red error indicator
+                alert("Please enable and unlock location privacy settings permission tracking for this site.");
             }
-            // Notice: your log showed "Position acquisition timed out" once, which is normal indoors.
-            // It will update fine as soon as you step near a window or outdoors!
-            document.getElementById('text_lat').innerText = "Signal Timeout";
-            document.getElementById('text_lon').innerText = "Retrying location lock...";
+            else if (error.code === error.TIMEOUT) {
+                // Signal dropped or timed out out in the field. Turn text color red to notify user.
+                statusLabel.innerText = "⚠️ Signal Lost (Searching Satellites...)";
+                statusLabel.style.color = "#FF3333";
+            }
         }
     </script>
 </body>
