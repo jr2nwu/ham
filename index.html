@@ -86,30 +86,29 @@
             font-weight: 500;
         }
 
-        /* Map Android XML layout vertical biases explicitly */
         #text_lat {
             top: 30%; /* app:layout_constraintVertical_bias="0.3" */
-            font-size: 35px; /* 35sp scaling equivalent */
+            font-size: 2.1875rem; /* 35sp scaling equivalent */
         }
 
         #text_lon {
             top: 40%; /* app:layout_constraintVertical_bias="0.4" */
-            font-size: 35px; /* 35sp scaling equivalent */
+            font-size: 2.1875rem; /* 35sp scaling equivalent */
         }
 
         #text_mgrsZone100K {
             top: 60%; /* app:layout_constraintVertical_bias="0.6" */
-            font-size: 40px; /* 40sp scaling equivalent */
+            font-size: 2.5rem; /* 40sp scaling equivalent */
         }
 
         #text_mgrsEast {
             top: 70%; /* app:layout_constraintVertical_bias="0.7" */
-            font-size: 40px; /* 40sp scaling equivalent */
+            font-size: 2.5rem; /* 40sp scaling equivalent */
         }
 
         #text_mgrsNorth {
             top: 80%; /* app:layout_constraintVertical_bias="0.8" */
-            font-size: 40px; /* 40sp scaling equivalent */
+            font-size: 2.5rem; /* 40sp scaling equivalent */
         }
     </style>
 </head>
@@ -122,7 +121,6 @@
         <!-- Dynamic GPS Connection Integrity Banner -->
         <div id="text_status" class="text-view">🛰️ GPS Stream Offline</div>
 
-        <!-- UI Elements mapping 1:1 to your Android XML layout schema -->
         <div id="text_lat" class="text-view">---</div>
         <div id="text_lon" class="text-view">---</div>
         <div id="text_mgrsZone100K" class="text-view">---</div>
