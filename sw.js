@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mgrs-v4';
+const CACHE_NAME = 'mgrs-v6';
 const ASSETS = [
     './',
 './index.html',
@@ -30,47 +30,48 @@ self.addEventListener('activate', (e) => {
             );
         })
     );
-    // Ensure the updated service worker takes control of pages immediately
     self.clients.claim();
 });
 
 // 3. Fetch Event: Smart dynamic routing strategy
 self.addEventListener('fetch', (e) => {
+    // Skip tracking non-http protocols (like chrome-extension://)
+    if (!e.request.url.startsWith('http')) return;
+
     const url = new URL(e.request.url);
 
-    // Strategy A: Network-First for HTML entries (Ensures UI updates instantly if online)
-    if (url.pathname === '/' || url.pathname.endsWith('index.html')) {
+    // Strategy A: Network-First for local HTML entries
+    if (url.origin === self.location.origin && (url.pathname === '/' || url.pathname.endsWith('index.html'))) {
         e.respondWith(
             fetch(e.request)
             .then((networkResponse) => {
-                // Update cache dynamically with the fresh file
                 if (networkResponse.status === 200) {
                     const responseClone = networkResponse.clone();
                     caches.open(CACHE_NAME).then((cache) => cache.put(e.request, responseClone));
                 }
                 return networkResponse;
             })
-            .catch(() => caches.match(e.request)) // Fallback to cache if offline
+            .catch(() => caches.match(e.request))
         );
         return;
     }
 
-    // Strategy B: Stale-While-Revalidate for sub-assets (JS, Manifest, Icons)
-    // Serves instantly from cache while pulling a fresh version in the background
-    e.respondWith(
-        caches.match(e.request).then((cachedResponse) => {
-            const fetchPromise = fetch(e.request).then((networkResponse) => {
-                if (networkResponse.status === 200) {
-                    const responseClone = networkResponse.clone();
-                    caches.open(CACHE_NAME).then((cache) => cache.put(e.request, responseClone));
-                }
-                return networkResponse;
-            }).catch(() => {
-                // Ignore network errors (e.g., when completely offline)
-            });
+    // Strategy B: Stale-While-Revalidate for local sub-assets (JS, Manifest, Icons)
+    if (url.origin === self.location.origin) {
+        e.respondWith(
+            caches.match(e.request).then((cachedResponse) => {
+                const fetchPromise = fetch(e.request).then((networkResponse) => {
+                    if (networkResponse.status === 200) {
+                        const responseClone = networkResponse.clone();
+                        caches.open(CACHE_NAME).then((cache) => cache.put(e.request, responseClone));
+                    }
+                    return networkResponse;
+                }).catch(() => {
+                    // Fail silently if offline
+                });
 
-            // Return cached resource immediately if available, otherwise wait for network
-            return cachedResponse || fetchPromise;
-        })
-    );
+                return cachedResponse || fetchPromise;
+            })
+        );
+    }
 });
