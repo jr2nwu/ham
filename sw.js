@@ -5,7 +5,7 @@ const ASSETS = [
 './manifest.json',
 './sw.js',
 './mgrs.js',
-'./mgrs.png' // Pre-caches your local app icon asset safely
+'./icons/icon-any.svg' // Pre-caches your local app icon asset
 ];
 
 self.addEventListener('install', (e) => {
