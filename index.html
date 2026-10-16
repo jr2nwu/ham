@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Live GPS Coordinate Display</title>
+    <title>Offline MGRS Coordinate</title>
     <link rel="manifest" href="./manifest.json">
     <!-- iOS Touch Icon -->
     <link rel="apple-touch-icon" href="icons/icon-any.svg" />
@@ -179,7 +179,7 @@
         function onLocationSuccess(position) {
             // Signal lock complete. Switch text indicator color to green
             const statusLabel = document.getElementById('text_status');
-            statusLabel.innerText = "🛰️ Live GPS Connected v1";
+            statusLabel.innerText = "🛰️ Live GPS Connected v2";
             statusLabel.style.color = "#00CC66";
 
             const latitude = position.coords.latitude;

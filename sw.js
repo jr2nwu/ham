@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mgrs-v1'; // Incremented to forcefully refresh old caches
+const CACHE_NAME = 'mgrs-v2'; // Incremented to forcefully refresh old caches
 const ASSETS = [
     './',
 './index.html',
