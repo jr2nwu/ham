@@ -8,75 +8,83 @@
     <!-- iOS Touch Icon -->
     <link rel="apple-touch-icon" href="icons/icon-any.svg" />
     <style>
+        /* ==========================================================================
+           1. DEFAULT LIGHT THEME SETTINGS (Matches Android ?attr/colorSurface)
+           ========================================================================== */
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #FFFFFF; /* Light surface background */
+            color: #000000;            /* Dark text color */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+            position: relative;
+        }
 
-/* ========================================================
-   GLOBAL THEMATIC CONFIGURATION (LIGHT & DARK SYSTEM SYNC)
-   ======================================================== */
+        /* Standard Light Mode Button Style */
+        #start_btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            padding: 15px 30px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #FFFFFF;
+            background-color: #000000;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: opacity 0.3s ease;
+        }
 
-:root {
-  /* Default Universal Canvas Values (Light Mode) */
-  --pwa-bg: #FFFFFF;
-  --pwa-surface: #F5F5F5;
-  --pwa-text-main: #111111;
-  --pwa-text-sub: #666666;
-  --pwa-lines: #E0E0E0;
-  --pwa-accent: #000000;
+        /* Default Status Text Color (Light Mode) */
+        #text_status {
+            top: 15%; /* Positioned neatly above Latitude box */
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #666666;
+        }
 
-  /* Browser Engine Intent Hook */
-  color-scheme: light dark;
-}
+        /* ==========================================================================
+           2. AUTOMATIC SYSTEM DARK THEME OVERRIDE (Follows phone display settings)
+           ========================================================================== */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #000000; /* Deep black surface */
+                color: #FFFFFF;            /* Crispy white text */
+            }
+            #start_btn {
+                color: #000000;
+                background-color: #FFFFFF;
+                box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+            }
+            #text_status {
+                color: #A0A0A0;
+            }
+        }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* Dynamic Theme Swaps (Dark Mode Alternative Grid) */
-    --pwa-bg: #121212;
-    --pwa-surface: #1E1E1E;
-    --pwa-text-main: #F5F5F5;
-    --pwa-text-sub: #AAAAAA;
-    --pwa-lines: #333333;
-    --pwa-accent: #FFFFFF;
-  }
-}
+        /* ==========================================================================
+           3. VIEW LAYOUT LAYER (Simulating ConstraintLayout Biases)
+           ========================================================================== */
+        .constraint-layout {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
 
-/* Fluid UI Shifting Implementation */
-body {
-  background-color: var(--pwa-bg);
-  color: var(--pwa-text-main);
-  margin: 0;
-  padding: 0;
-
-  /* Linear system interpolation for fluid color transitions */
-  transition: background-color 0.3s linear, color 0.3s linear;
-}
-
-
-
-
-/* Styling the GPS Interface elements using the theme variables */
-.gps-card {
-  background-color: var(--pwa-surface);
-  border: 1px solid var(--pwa-lines);
-  border-radius: 12px;
-  padding: 20px;
-  text-align: center;
-}
-
-.gps-status {
-  color: var(--pwa-text-sub);
-  font-size: 0.9rem;
-}
-
-/* Action button that respects the accent theme */
-.gps-btn {
-  background-color: var(--pwa-accent);
-  color: var(--pwa-bg); /* Inverts text color automatically */
-  border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
+        .text-view {
+            position: absolute;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            white-space: nowrap;
+            text-align: center;
+            font-weight: 500;
+        }
 
         /* Map Android XML layout vertical biases explicitly */
         #text_lat {
