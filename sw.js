@@ -1,11 +1,13 @@
-const CACHE_NAME = 'gps-live-v4'; // Incremented to forcefully refresh old caches
+const CACHE_NAME = 'mgrs-v1'; // Incremented to forcefully refresh old caches
 const ASSETS = [
     './',
 './index.html',
 './manifest.json',
 './sw.js',
 './mgrs.js',
-'./icons/icon-any.svg' // Pre-caches your local app icon asset
+'./icons/icon-any.svg',
+'./icons/icon-maskable.svg',
+'./icons/icon-monochrome.svg'  // Pre-caches your local app icon asset
 ];
 
 self.addEventListener('install', (e) => {
