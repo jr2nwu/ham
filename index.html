@@ -184,7 +184,7 @@
          * Executed continuously by OS anytime a satellite refresh passes accuracy boundaries
          */
         function onLocationSuccess(position) {
-            updateStatus("🛰️ GPS接続中", "status-locked");
+            updateStatus("", "status-locked");
 
             const latitude = position.coords.latitude;
             const longitude = position.coords.longitude;
