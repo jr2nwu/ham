@@ -1,14 +1,14 @@
-const CACHE_NAME = 'mgrs-v7';
+const CACHE_NAME = 'mgrs-v8';
 const ASSETS = [
     './',
-'./index.html',
-'./manifest.json',
-'./mgrs.js',
-'./icons/icon-192.png',
-'./icons/icon-512.png',
-'./icons/icon-maskable-512.png',
-'./icons/icon-monochrome-512.png'
-];
+    './index.html',
+    './manifest.json',
+    './mgrs.js',
+    './icons/icon-192.png',
+    './icons/icon-512.png',
+    './icons/icon-maskable-512.png',
+    './icons/icon-monochrome-512.png'
+    ];
 
 // 1. Install Event: Pre-cache all essential assets
 self.addEventListener('install', (e) => {
@@ -16,7 +16,7 @@ self.addEventListener('install', (e) => {
         caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
     );
     self.skipWaiting();
-});
+    });
 
 // 2. Activate Event: Clean up old versions of caches safely
 self.addEventListener('activate', (e) => {
@@ -32,11 +32,11 @@ self.addEventListener('activate', (e) => {
     self.clients.claim();
 });
 
-// 3. Fetch Event: Smart dynamic routing strategy
+// 3. Fetch Event: Smart dynamic routing
 self.addEventListener('fetch', (e) => {
     const url = new URL(e.request.url);
 
-    // Strategy A: Network-First for HTML entries (Ensures UI updates instantly if online)
+    // Network-First for HTML entries (Ensures UI updates instantly if online)
     if (url.pathname === '/' || url.pathname.endsWith('index.html')) {
         e.respondWith(
             fetch(e.request)
@@ -52,7 +52,7 @@ self.addEventListener('fetch', (e) => {
         return;
     }
 
-    // Strategy B: Corrected Stale-While-Revalidate for local sub-assets
+    // Corrected Stale-While-Revalidate for local sub-assets
     if (url.origin === self.location.origin) {
         e.respondWith(
             caches.match(e.request).then((cachedResponse) => {
@@ -67,10 +67,10 @@ self.addEventListener('fetch', (e) => {
                     // Fail silently if offline
                 });
 
-                // Crucial Fix: Return cached response immediately if it exists.
+                // Return cached response if it exists.
                 // If it doesn't exist, return the network promise so the browser gets a valid Response object.
                 return cachedResponse || fetchPromise;
             })
         );
     }
-}); // Fixed missing closing brackets
+});

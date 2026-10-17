@@ -113,17 +113,14 @@
             .status-error     { color: #FF5555; }
         }
     </style>
-
 </head>
-
 
 <body>
 
     <div class="constraint-layout">
-        <!-- Interactive Trigger required to bypass strict iOS Safari background restrictions -->
+        <!-- Bypass iOS Safari restrictions -->
         <button id="start_btn" onclick="initializeGps()">位置情報を取得</button>
 
-        <!-- Dynamic GPS Connection Integrity Banner -->
         <div id="gps_status" class="text-view status-searching">🛰️ 位置情報未取得</div>
         <div id="text_lat" class="text-view">---</div>
         <div id="text_lon" class="text-view">---</div>
@@ -132,7 +129,7 @@
         <div id="text_mgrsNorth" class="text-view">---</div>
     </div>
 
-    <!-- PWA Worker Layer registration to handle true offline standalone cache executions -->
+    <!-- PWA Worker Layer to handle offline standalone cache executions -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -143,7 +140,7 @@
         }
     </script>
 
-    <!-- Load the locally bundled proj4js/mgrs parsing asset code script -->
+    <!-- Load the proj4js/mgrs script -->
     <script src="./mgrs.js"></script>
 
     <!-- Core Pipeline: Sensor extraction, format structures, calculation splits -->
@@ -155,7 +152,9 @@
             maximumAge: 0             // Strictly rejects cached positions for safety navigation
         };
 
-        // Helper helper to switch status tracking classes cleanly
+        /**
+         * Helper to switch status tracking classes cleanly
+         */
         function updateStatus(text, className) {
             const el = document.getElementById('gps_status');
             el.innerText = text;
@@ -189,7 +188,7 @@
             const latitude = position.coords.latitude;
             const longitude = position.coords.longitude;
 
-            // 1. Process and format Latitude text exactly like Android Kotlin/Java rules
+            // 1. Process and format Latitude text like Android Kotlin/Java rules
             let latitudeStr = latitude.toFixed(5);
             if (latitude > 0) {
                 latitudeStr += "° N";
@@ -200,7 +199,7 @@
             }
             document.getElementById('text_lat').innerText = latitudeStr;
 
-            // 2. Process and format Longitude text exactly like Android Kotlin/Java rules
+            // 2. Process and format Longitude text like Android Kotlin/Java rules
             let longitudeStr = longitude.toFixed(5);
             if (longitude > 0) {
                 longitudeStr += "° E";
@@ -250,7 +249,7 @@
         }
 
         /**
-         * Triggers dynamically if tree canopy blocks satellite views or permissions crash out
+         * Triggers dynamically if satellite lost or permissions crash out
          */
         function onLocationError(error) {
             console.error("Sensor Exception Code (" + error.code + "): " + error.message);
@@ -258,10 +257,9 @@
             if (error.code === error.PERMISSION_DENIED) {
                 document.getElementById('start_btn').style.display = 'block';
                 updateStatus("❌ 位置情報へのアクセス失敗", "status-error");
-                alert("Please enable and unlock location privacy settings permission tracking for this site.");
+                alert("Please enable location permission tracking.");
             }
             else if (error.code === error.TIMEOUT) {
-                // 🚀 FIX: Smooth automatic degradation indicator state management
                 updateStatus("⚠️ GPS信号ロスト", "status-error");
             }
         }
