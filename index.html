@@ -1,29 +1,52 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="jp">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Offline MGRS Coordinate</title>
+    <title>MGRS座標</title>
     <link rel="manifest" href="./manifest.json">
     <!-- iOS Touch Icon -->
     <link rel="apple-touch-icon" href="icons/icon-any.svg" />
+
     <style>
         /* ==========================================================================
-           1. DEFAULT LIGHT THEME SETTINGS (Matches Android ?attr/colorSurface)
+           1. DEFAULT GLOBAL LIGHT SETTINGS & VIEWPORT LAYOUT
            ========================================================================== */
         body {
             margin: 0;
             padding: 0;
             width: 100vw;
-            height: 100vh;
+            height: 100dvh; /* Uses Dynamic Viewport Height to prevent mobile toolbar clipping */
             background-color: #FFFFFF; /* Light surface background */
-            color: #000000;            /* Dark text color */
+            color: #000000;            /* Default dark text color */
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             overflow: hidden;
             position: relative;
         }
 
-        /* Standard Light Mode Button Style */
+        .constraint-layout {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Base text configuration simulating Android's TextView layer mechanics */
+        .text-view {
+            position: absolute;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            white-space: nowrap;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* ==========================================================================
+           2. INTERACTIVE COMPONENT STYLING
+           ========================================================================== */
         #start_btn {
             position: absolute;
             top: 50%;
@@ -42,80 +65,58 @@
             transition: opacity 0.3s ease;
         }
 
-        /* Default Status Text Color (Light Mode) */
-        gps_status {
-            top: 15%; /* Positioned neatly above Latitude box */
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #666666;
+        /* ==========================================================================
+           3. VERTICAL CONSTRAINT BIASES & TYPOGRAPHY SCALING
+           ========================================================================== */
+        #gps_status       { top: 15%; font-size: 1.2rem; font-weight: bold; line-height: normal; }
+        #text_lat         { top: 30%; }
+        #text_lon         { top: 40%; }
+        #text_mgrsZone100K { top: 60%; }
+        #text_mgrsEast    { top: 70%; }
+        #text_mgrsNorth   { top: 80%; }
+
+        /* Grouped Typography scaling equivalents (Matches Android SP guidelines) */
+        #text_lat, #text_lon {
+            font-size: 2.1875rem; /* 35sp scaling standard */
+        }
+        #text_mgrsZone100K, #text_mgrsEast, #text_mgrsNorth {
+            font-size: 2.5rem; /* 40sp scaling standard */
         }
 
         /* ==========================================================================
-           2. AUTOMATIC SYSTEM DARK THEME OVERRIDE (Follows phone display settings)
+           4. STATUS THEMING LAYER (Light Mode Defs)
+           ========================================================================== */
+        .status-searching { color: #666666; }
+        .status-warning   { color: #B38F00; }
+        .status-locked    { color: #008844; }
+        .status-error     { color: #CC0000; }
+
+        /* ==========================================================================
+           5. SYSTEM AUTOMATIC DARK THEME OVERRIDES
            ========================================================================== */
         @media (prefers-color-scheme: dark) {
             body {
                 background-color: #000000; /* Deep black surface */
-                color: #FFFFFF;            /* Crispy white text */
+                color: #E0E0E0;            /* Off-white text to reduce eye-strain */
             }
+
             #start_btn {
                 color: #000000;
                 background-color: #FFFFFF;
                 box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
             }
-            gps_status {
-                color: #A0A0A0;
-            }
-        }
 
-        /* ==========================================================================
-           3. VIEW LAYOUT LAYER (Simulating ConstraintLayout Biases)
-           ========================================================================== */
-        .constraint-layout {
-            position: relative;
-            width: 100%;
-            height: 100%;
-        }
-
-        .text-view {
-            position: absolute;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            white-space: nowrap;
-            text-align: center;
-            font-weight: 500;
-        }
-        .hidden {
-            display: none !important;
-        }
-
-
-        #text_lat {
-            top: 30%; /* app:layout_constraintVertical_bias="0.3" */
-            font-size: 2.1875rem; /* 35sp scaling equivalent */
-        }
-
-        #text_lon {
-            top: 40%; /* app:layout_constraintVertical_bias="0.4" */
-            font-size: 2.1875rem; /* 35sp scaling equivalent */
-        }
-
-        #text_mgrsZone100K {
-            top: 60%; /* app:layout_constraintVertical_bias="0.6" */
-            font-size: 2.5rem; /* 40sp scaling equivalent */
-        }
-
-        #text_mgrsEast {
-            top: 70%; /* app:layout_constraintVertical_bias="0.7" */
-            font-size: 2.5rem; /* 40sp scaling equivalent */
-        }
-
-        #text_mgrsNorth {
-            top: 80%; /* app:layout_constraintVertical_bias="0.8" */
-            font-size: 2.5rem; /* 40sp scaling equivalent */
+            /* Overwrites high-contrast colors smoothly against the black screen */
+            .status-searching { color: #A0A0A0; }
+            .status-warning   { color: #FFCC00; }
+            .status-locked    { color: #00FF88; }
+            .status-error     { color: #FF5555; }
         }
     </style>
+
 </head>
+
+
 <body>
 
     <div class="constraint-layout">
@@ -123,7 +124,7 @@
         <button id="start_btn" onclick="initializeGps()">位置情報を取得</button>
 
         <!-- Dynamic GPS Connection Integrity Banner -->
-        <div id="text_status" class="text-view">🛰️ 位置情報未取得</div>
+        <div id="gps_status" class="text-view status-searching">🛰️ 位置情報未取得</div>
         <div id="text_lat" class="text-view">---</div>
         <div id="text_lon" class="text-view">---</div>
         <div id="text_mgrsZone100K" class="text-view">---</div>
@@ -154,23 +155,27 @@
             maximumAge: 0             // Strictly rejects cached positions for safety navigation
         };
 
+        // Helper helper to switch status tracking classes cleanly
+        function updateStatus(text, className) {
+            const el = document.getElementById('gps_status');
+            el.innerText = text;
+            el.className = 'text-view ' + className;
+        }
+
         /**
          * Fires on button interaction to launch hardware feeds
          */
         function initializeGps() {
             document.getElementById('start_btn').style.display = 'none';
-            const statusLabel = document.getElementById('text_status');
-            statusLabel.innerText = "🛰️ 衛星に接続中...";
-            statusLabel.style.color = "#FFCC00"; // Warn yellow state while locking coordinates
+            updateStatus("🛰️ 衛星に接続中…", "status-warning");
 
-            document.getElementById('text_lat').innerText = "Acquiring signal...";
-            document.getElementById('text_lon').innerText = "Searching...";
+            document.getElementById('text_lat').innerText = "信号を受信中…";
+            document.getElementById('text_lon').innerText = "検索中…";
 
             if ("geolocation" in navigator) {
                 watchId = navigator.geolocation.watchPosition(onLocationSuccess, onLocationError, geoOptions);
             } else {
-                statusLabel.innerText = "❌ GPS Hardware Missing";
-                statusLabel.style.color = "#FF3333";
+                updateStatus("❌ GPS機能が見つかりません", "status-error");
                 document.getElementById('text_lat').innerText = "Not Supported";
             }
         }
@@ -179,10 +184,7 @@
          * Executed continuously by OS anytime a satellite refresh passes accuracy boundaries
          */
         function onLocationSuccess(position) {
-            // Signal lock complete. Switch text indicator color to green
-            const statusLabel = document.getElementById('text_status');
-            statusLabel.innerText = "🛰️ GPS接続中";
-            statusLabel.style.color = "#00CC66";
+            updateStatus("🛰️ GPS接続中", "status-locked");
 
             const latitude = position.coords.latitude;
             const longitude = position.coords.longitude;
@@ -215,15 +217,19 @@
                 const rawMgrs = window.mgrs.forward([longitude, latitude], 5);
                 console.log("Raw MGRS Output Trace:", rawMgrs);
 
-                if (rawMgrs && rawMgrs.length >= 13) {
+                if (rawMgrs && rawMgrs.length >= 12) {
                     // Automatically locates the alphabetical band separator character boundary index
                     const letterMatch = rawMgrs.match(/[A-Z]/);
                     if (letterMatch) {
                         const firstLetterIdx = letterMatch.index;
                         const gzdEndIdx = firstLetterIdx + 1;
 
-                        // Slice and partition strings safely by counting indexing spaces out
-                        const mgrsZone     = rawMgrs.substring(0, gzdEndIdx);
+                        // Dynamic padding adjustment for single-digit UTM zones (e.g., "9Q" -> "09Q")
+                        let mgrsZone = rawMgrs.substring(0, gzdEndIdx);
+                        if (firstLetterIdx === 1) {
+                            mgrsZone = "0" + mgrsZone;
+                        }
+
                         const mgrs100K     = rawMgrs.substring(gzdEndIdx, gzdEndIdx + 2);
 
                         const numericPart  = rawMgrs.substring(gzdEndIdx + 2);
@@ -233,7 +239,6 @@
                         const mgrsNorthing = numericPart.substring(halfLength);
 
                         // Feed parsed fields straight into layout text elements
-                        // Note the double-space separating Zone and 100K block to match Android layout logic
                         document.getElementById('text_mgrsZone100K').innerText = `${mgrsZone}  ${mgrs100K}`;
                         document.getElementById('text_mgrsEast').innerText = mgrsEasting;
                         document.getElementById('text_mgrsNorth').innerText = mgrsNorthing;
@@ -249,18 +254,15 @@
          */
         function onLocationError(error) {
             console.error("Sensor Exception Code (" + error.code + "): " + error.message);
-            const statusLabel = document.getElementById('gps_status');
 
             if (error.code === error.PERMISSION_DENIED) {
                 document.getElementById('start_btn').style.display = 'block';
-                statusLabel.innerText = "❌ 位置情報へのアクセス失敗";
-                statusLabel.style.color = "#FF3333"; // Red error indicator
+                updateStatus("❌ 位置情報へのアクセス失敗", "status-error");
                 alert("Please enable and unlock location privacy settings permission tracking for this site.");
             }
             else if (error.code === error.TIMEOUT) {
-                // Signal dropped or timed out out in the field. Turn text color red to notify user.
-                statusLabel.innerText = "⚠️ GPS信号ロスト";
-                statusLabel.style.color = "#FF3333";
+                // 🚀 FIX: Smooth automatic degradation indicator state management
+                updateStatus("⚠️ GPS信号ロスト", "status-error");
             }
         }
     </script>

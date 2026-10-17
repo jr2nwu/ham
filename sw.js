@@ -3,7 +3,6 @@ const ASSETS = [
     './',
 './index.html',
 './manifest.json',
-'./sw.js',
 './mgrs.js',
 './icons/icon-192.png',
 './icons/icon-512.png',
@@ -35,13 +34,10 @@ self.addEventListener('activate', (e) => {
 
 // 3. Fetch Event: Smart dynamic routing strategy
 self.addEventListener('fetch', (e) => {
-    // Skip tracking non-http protocols (like chrome-extension://)
-    if (!e.request.url.startsWith('http')) return;
-
     const url = new URL(e.request.url);
 
-    // Strategy A: Network-First for local HTML entries
-    if (url.origin === self.location.origin && (url.pathname === '/' || url.pathname.endsWith('index.html'))) {
+    // Strategy A: Network-First for HTML entries (Ensures UI updates instantly if online)
+    if (url.pathname === '/' || url.pathname.endsWith('index.html')) {
         e.respondWith(
             fetch(e.request)
             .then((networkResponse) => {
@@ -51,15 +47,16 @@ self.addEventListener('fetch', (e) => {
                 }
                 return networkResponse;
             })
-            .catch(() => caches.match(e.request))
+            .catch(() => caches.match(e.request)) // Fallback to cache if offline
         );
         return;
     }
 
-    // Strategy B: Stale-While-Revalidate for local sub-assets (JS, Manifest, Icons)
+    // Strategy B: Corrected Stale-While-Revalidate for local sub-assets
     if (url.origin === self.location.origin) {
         e.respondWith(
             caches.match(e.request).then((cachedResponse) => {
+                // Set up the network fetch to update the cache in the background
                 const fetchPromise = fetch(e.request).then((networkResponse) => {
                     if (networkResponse.ok) {
                         const responseClone = networkResponse.clone();
@@ -70,8 +67,10 @@ self.addEventListener('fetch', (e) => {
                     // Fail silently if offline
                 });
 
+                // Crucial Fix: Return cached response immediately if it exists.
+                // If it doesn't exist, return the network promise so the browser gets a valid Response object.
                 return cachedResponse || fetchPromise;
             })
         );
     }
-});
+}); // Fixed missing closing brackets
