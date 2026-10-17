@@ -3,17 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <!-- Allows the app to open in full-screen standalone mode without the Safari browser bar -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="MGRS">
     <title>Offline MGRS Coordinate</title>
     <link rel="manifest" href="./manifest.json">
     <!-- iOS Touch Icon -->
-    <link rel="apple-touch-icon" href="icons/icon-192.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-512.png">
-    <!-- Configures the status bar color at the very top of the screen -->
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
+    <link rel="apple-touch-icon" href="icons/icon-any.svg" />
     <style>
         /* ==========================================================================
            1. DEFAULT LIGHT THEME SETTINGS (Matches Android ?attr/colorSurface)
@@ -99,27 +92,27 @@
 
         #text_lat {
             top: 30%; /* app:layout_constraintVertical_bias="0.3" */
-            font-size: 2.5rem; /* 2.1875 old, 35sp scaling equivalent */
+            font-size: 2.1875rem; /* 35sp scaling equivalent */
         }
 
         #text_lon {
             top: 40%; /* app:layout_constraintVertical_bias="0.4" */
-            font-size: 2.5rem; /* 35sp scaling equivalent */
+            font-size: 2.1875rem; /* 35sp scaling equivalent */
         }
 
         #text_mgrsZone100K {
             top: 60%; /* app:layout_constraintVertical_bias="0.6" */
-            font-size: 2.815rem; /*2.5 old, 40sp scaling equivalent */
+            font-size: 2.5rem; /* 40sp scaling equivalent */
         }
 
         #text_mgrsEast {
             top: 70%; /* app:layout_constraintVertical_bias="0.7" */
-            font-size: 2.815rem; /* 40sp scaling equivalent */
+            font-size: 2.5rem; /* 40sp scaling equivalent */
         }
 
         #text_mgrsNorth {
             top: 80%; /* app:layout_constraintVertical_bias="0.8" */
-            font-size: 2.815rem; /* 40sp scaling equivalent */
+            font-size: 2.5rem; /* 40sp scaling equivalent */
         }
     </style>
 </head>
@@ -130,8 +123,7 @@
         <button id="start_btn" onclick="initializeGps()">位置情報を取得</button>
 
         <!-- Dynamic GPS Connection Integrity Banner -->
-        <div id="gps_status" class="text-view">🛰️ 位置情報未取得</div>
-
+        <div id="text_status" class="text-view">🛰️ 位置情報未取得</div>
         <div id="text_lat" class="text-view">---</div>
         <div id="text_lon" class="text-view">---</div>
         <div id="text_mgrsZone100K" class="text-view">---</div>
@@ -167,13 +159,12 @@
          */
         function initializeGps() {
             document.getElementById('start_btn').style.display = 'none';
-
-            const statusLabel = document.getElementById('gps_status');
+            const statusLabel = document.getElementById('text_status');
             statusLabel.innerText = "🛰️ 衛星に接続中...";
             statusLabel.style.color = "#FFCC00"; // Warn yellow state while locking coordinates
 
-            document.getElementById('text_lat').innerText = "信号を受信中...";
-            document.getElementById('text_lon').innerText = "検索中...";
+            document.getElementById('text_lat').innerText = "Acquiring signal...";
+            document.getElementById('text_lon').innerText = "Searching...";
 
             if ("geolocation" in navigator) {
                 watchId = navigator.geolocation.watchPosition(onLocationSuccess, onLocationError, geoOptions);
@@ -189,7 +180,7 @@
          */
         function onLocationSuccess(position) {
             // Signal lock complete. Switch text indicator color to green
-            const statusLabel = document.getElementById('gps_status');
+            const statusLabel = document.getElementById('text_status');
             statusLabel.innerText = "🛰️ GPS接続中";
             statusLabel.style.color = "#00CC66";
 
