@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mgrs-v6';
+const CACHE_NAME = 'mgrs-v7';
 const ASSETS = [
     './',
 './index.html',
@@ -45,7 +45,7 @@ self.addEventListener('fetch', (e) => {
         e.respondWith(
             fetch(e.request)
             .then((networkResponse) => {
-                if (networkResponse.status === 200) {
+                if (networkResponse.ok) {
                     const responseClone = networkResponse.clone();
                     caches.open(CACHE_NAME).then((cache) => cache.put(e.request, responseClone));
                 }
@@ -61,7 +61,7 @@ self.addEventListener('fetch', (e) => {
         e.respondWith(
             caches.match(e.request).then((cachedResponse) => {
                 const fetchPromise = fetch(e.request).then((networkResponse) => {
-                    if (networkResponse.status === 200) {
+                    if (networkResponse.ok) {
                         const responseClone = networkResponse.clone();
                         caches.open(CACHE_NAME).then((cache) => cache.put(e.request, responseClone));
                     }

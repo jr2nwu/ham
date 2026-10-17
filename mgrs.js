@@ -62,7 +62,7 @@
    * The northing of the equator for southern hemisphere locations (in UTM)
    * {number} @private
    */
-  const NORTHING_OFFFSET = 10000000;
+  const NORTHING_OFFSET = 10000000;
 
   /**
    * UTM zone width in degrees
@@ -226,7 +226,7 @@
 
     let UTMNorthing = (SCALE_FACTOR * (M + N * Math.tan(LatRad) * (A * A / 2 + (5 - T + 9 * C + 4 * C * C) * A * A * A * A / 24 + (61 - 58 * T + T * T + 600 * C - 330 * eccPrimeSquared) * A * A * A * A * A * A / 720)));
     if (Lat < 0) {
-      UTMNorthing += NORTHING_OFFFSET;
+      UTMNorthing += NORTHING_OFFSET;
     }
 
     return {
@@ -274,7 +274,7 @@
     // if the Zone letter isn't exactly correct it should indicate
     // the hemisphere correctly
     if (zoneLetter < 'N') {
-      y -= NORTHING_OFFFSET; // remove offset used for southern hemisphere
+      y -= NORTHING_OFFSET; // remove offset used for southern hemisphere
     }
 
     // +HALF_UTM_ZONE_WIDTH puts origin in middle of zone

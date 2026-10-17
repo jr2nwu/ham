@@ -50,7 +50,7 @@
         }
 
         /* Default Status Text Color (Light Mode) */
-        #text_status {
+        gps_status {
             top: 15%; /* Positioned neatly above Latitude box */
             font-size: 1.2rem;
             font-weight: bold;
@@ -70,7 +70,7 @@
                 background-color: #FFFFFF;
                 box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
             }
-            #text_status {
+            gps_status {
                 color: #A0A0A0;
             }
         }
@@ -92,6 +92,10 @@
             text-align: center;
             font-weight: 500;
         }
+        .hidden {
+            display: none !important;
+        }
+
 
         #text_lat {
             top: 30%; /* app:layout_constraintVertical_bias="0.3" */
@@ -123,10 +127,10 @@
 
     <div class="constraint-layout">
         <!-- Interactive Trigger required to bypass strict iOS Safari background restrictions -->
-        <button id="start_btn" onclick="initializeGps()">GPSを開始</button>
+        <button id="start_btn" onclick="initializeGps()">位置情報を取得</button>
 
         <!-- Dynamic GPS Connection Integrity Banner -->
-        <div id="text_status" class="text-view">🛰️ GPSオフライン</div>
+        <div id="gps_status" class="text-view">🛰️ 位置情報未取得</div>
 
         <div id="text_lat" class="text-view">---</div>
         <div id="text_lon" class="text-view">---</div>
@@ -164,7 +168,7 @@
         function initializeGps() {
             document.getElementById('start_btn').style.display = 'none';
 
-            const statusLabel = document.getElementById('text_status');
+            const statusLabel = document.getElementById('gps_status');
             statusLabel.innerText = "🛰️ 衛星に接続中...";
             statusLabel.style.color = "#FFCC00"; // Warn yellow state while locking coordinates
 
@@ -185,8 +189,8 @@
          */
         function onLocationSuccess(position) {
             // Signal lock complete. Switch text indicator color to green
-            const statusLabel = document.getElementById('text_status');
-            statusLabel.innerText = "🛰️ GPS接続中 v6";
+            const statusLabel = document.getElementById('gps_status');
+            statusLabel.innerText = "🛰️ GPS接続中";
             statusLabel.style.color = "#00CC66";
 
             const latitude = position.coords.latitude;
@@ -254,17 +258,17 @@
          */
         function onLocationError(error) {
             console.error("Sensor Exception Code (" + error.code + "): " + error.message);
-            const statusLabel = document.getElementById('text_status');
+            const statusLabel = document.getElementById('gps_status');
 
             if (error.code === error.PERMISSION_DENIED) {
                 document.getElementById('start_btn').style.display = 'block';
-                statusLabel.innerText = "❌ Location Access Denied";
+                statusLabel.innerText = "❌ 位置情報へのアクセス失敗";
                 statusLabel.style.color = "#FF3333"; // Red error indicator
                 alert("Please enable and unlock location privacy settings permission tracking for this site.");
             }
             else if (error.code === error.TIMEOUT) {
                 // Signal dropped or timed out out in the field. Turn text color red to notify user.
-                statusLabel.innerText = "⚠️ Signal Lost (Searching Satellites...)";
+                statusLabel.innerText = "⚠️ GPS信号ロスト";
                 statusLabel.style.color = "#FF3333";
             }
         }
