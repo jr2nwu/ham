@@ -40,7 +40,7 @@ self.addEventListener('fetch', (e) => {
 
     const url = new URL(e.request.url);
 
-    // Strategy A: Network-First for local HTML entries
+    // Network-First for local HTML entries
     if (url.origin === self.location.origin && (url.pathname === '/' || url.pathname.endsWith('index.html'))) {
         e.respondWith(
             fetch(e.request)
@@ -56,7 +56,7 @@ self.addEventListener('fetch', (e) => {
         return;
     }
 
-    // Strategy B: Stale-While-Revalidate for local sub-assets (JS, Manifest, Icons)
+    // Stale-While-Revalidate for local sub-assets (JS, Manifest, Icons)
     if (url.origin === self.location.origin) {
         e.respondWith(
             caches.match(e.request).then((cachedResponse) => {
